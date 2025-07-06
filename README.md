@@ -1,3 +1,8 @@
+# Testing 
+* docker compose -f compose.dev.yaml up -d
+* docker compose -f compose.dev.yaml exec workspace bash
+* php artisan test --profile --recreate-databases
+
 # Laravel Docker Examples Project
 
 ## Table of Contents
