@@ -1,7 +1,9 @@
 <?php
 
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
+uses(RefreshDatabase::class);
 test('user can register with valid credentials', function () {
     $response = $this->post('/api/register', [
         'name' => 'John Doe',
