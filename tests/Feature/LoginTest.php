@@ -29,7 +29,7 @@ test('login fails with incorrect email', function () {
         'password' => 'password'
     ]);
 
-    $response->assertStatus(401);
+    $response->assertStatus(422);
 });
 
 test('login fails with incorrect password', function () {
