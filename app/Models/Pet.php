@@ -19,6 +19,10 @@ class Pet extends Model
         'name',
         'photo',
         'status',
+        'age',
+        'type',
+        'breed',
+        'size',
     ];
 
     /**
@@ -30,6 +34,8 @@ class Pet extends Model
     {
         return [
             'status' => PetStatus::class,
+            'type' => PetType::class,
+            'size' => PetSize::class,
         ];
     }
 

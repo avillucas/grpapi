@@ -3,6 +3,8 @@
 namespace Database\Factories;
 
 use App\Models\Pet;
+use App\Models\PetType;
+use App\Models\PetSize;
 use App\Models\PetStatus;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -25,10 +27,20 @@ class PetFactory extends Factory
      */
     public function definition(): array
     {
+        $type = $this->faker->randomElement(PetType::cases());
+        $breeds = [
+            'cat' => ['Siamés', 'Persa', 'Maine Coon', 'Ragdoll', 'Bengalí', 'Común Europeo'],
+            'dog' => ['Labrador', 'Golden Retriever', 'Pastor Alemán', 'Bulldog', 'Caniche', 'Mestizo']
+        ];
+
         return [
             'name' => $this->faker->firstName(),
             'photo' => null, // Por defecto sin foto
             'status' => $this->faker->randomElement(PetStatus::cases())->value,
+            'age' => $this->faker->numberBetween(1, 15),
+            'type' => $type->value,
+            'breed' => $this->faker->randomElement($breeds[$type->value]),
+            'size' => $this->faker->randomElement(PetSize::cases())->value,
         ];
     }
 
