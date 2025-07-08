@@ -1,8 +1,5 @@
 <?php
 
-use App\Models\User;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PetController;
 use App\Http\Controllers\AuthController;
@@ -15,12 +12,15 @@ Route::post('/register', [AuthController::class, 'register'])->name('api.registe
 
 // User CRUD routes (protected by authentication)
 Route::middleware('auth:sanctum')->group(function () {
+    Route::post('adoption-requests/myself', [AdoptionRequestController::class, 'myself'])->name('adoption-requests.myself');
+});
+// User CRUD routes (protected by admin authentication)
+Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('users', UserController::class);
     Route::apiResource('pets', PetController::class);
     Route::apiResource('adoption-requests', AdoptionRequestController::class);
     
-    // Additional routes for adoption request actions
-    Route::post('adoption-requests/myself', [AdoptionRequestController::class, 'myself'])->name('adoption-requests.approve');
     Route::post('adoption-requests/{id}/approve', [AdoptionRequestController::class, 'approve'])->name('adoption-requests.approve');
     Route::post('adoption-requests/{id}/reject', [AdoptionRequestController::class, 'reject'])->name('adoption-requests.reject');
 });
+

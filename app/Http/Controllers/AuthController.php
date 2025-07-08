@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
+    const ADMIN_NAME = 'avillucas';
+
     /**
      * Register a new user.
      * 
@@ -49,7 +51,6 @@ class AuthController extends Controller
                 'token' => $token,
                 'user' => $user
             ], 201);
-
         } catch (Exception $e) {
             return response()->json([
                 'message' => 'Registration failed',
@@ -67,31 +68,34 @@ class AuthController extends Controller
     public function login(Request $request)
     {
 
-         // Validar los datos de entrada
-            $validator = Validator::make($request->all(), [
-                'email' => 'required|string|email|max:255|exists:users,email',
-                'password' => 'required|string|min:8',
-            ]);
-            if ($validator->fails()) {
-                return response()->json([
-                    'message' => 'Validation failed',
-                    'errors' => $validator->errors()
-                ], 422);
-            }
+        // Validar los datos de entrada
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|string|email|max:255|exists:users,email',
+            'password' => 'required|string|min:8',
+        ]);
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
 
         $credentials = $request->only('email', 'password');
         if (Auth::attempt($credentials)) {
             $user = User::find(Auth::id());
-            $token = $user->createToken('api')->plainTextToken;
+            $abilities = [];
+            if ($user->name == self::ADMIN_NAME) {
+                $abilities = ['admin'];
+            }
+            $token = $user->createToken('api', $abilities)->plainTextToken;
             return response()->json([
                 'message' => 'Login successful',
                 'token' => $token,
-                'user' => $user             
+                'abilities' => $abilities,
+                'user' => $user
             ], 200);
         }
 
         return response()->json(['message' => 'Unauthorized'], 401);
     }
 }
-
-
