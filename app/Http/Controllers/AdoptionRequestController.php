@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Pet;
+use App\Models\PetStatus;
 use Illuminate\Http\Request;
 use App\Models\AdoptionRequest;
 use Illuminate\Support\Facades\Auth;
@@ -408,8 +410,8 @@ class AdoptionRequestController extends Controller
             $adoptionRequest->save();
 
             // Optionally update pet status to adopted
-            // $adoptionRequest->pet->status = PetStatus::ADOPTED;
-            // $adoptionRequest->pet->save();
+            $adoptionRequest->pet->status = PetStatus::ADOPTED;
+            $adoptionRequest->pet->save();
 
             return response()->json([
                 'message' => 'Adoption request approved successfully',
@@ -486,10 +488,10 @@ class AdoptionRequestController extends Controller
     {
         try {
             $userId = Auth::id();
-            
+      
             $adoptionRequests = AdoptionRequest::with(['pet'])
-                ->where('user_id', $userId)
-                ->orderBy('created_at', 'desc')
+                ->where('user_id', '=',$userId)
+                ->orderBy('updated_at', 'desc')
                 ->get()
                 ->map(function ($request) {
                     return [
@@ -521,7 +523,8 @@ class AdoptionRequestController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Failed to retrieve adoption requests',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'user_id' => Auth::id()
             ], 500);
         }
     }
