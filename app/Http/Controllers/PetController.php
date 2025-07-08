@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Pet;
+use App\Models\PetType;
+use App\Models\PetSize;
 use App\Models\PetStatus;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rules\Enum;
@@ -26,6 +28,10 @@ class PetController extends Controller
                     'photo' => $pet->photo,
                     'photo_url' => $pet->photo_url,
                     'status' => $pet->status->value,
+                    'age' => $pet->age,
+                    'type' => $pet->type?->value,
+                    'breed' => $pet->breed,
+                    'size' => $pet->size?->value,
                     'created_at' => $pet->created_at,
                     'updated_at' => $pet->updated_at,
                 ];
@@ -55,6 +61,10 @@ class PetController extends Controller
             $validator = Validator::make($request->all(), [
                 'name' => 'required|string|max:255',
                 'photo' => 'nullable|image|mimes:jpg,jpeg,png|max:2048', // 2MB max
+                'age' => 'nullable|integer|min:0|max:30',
+                'type' => ['nullable', new Enum(PetType::class)],
+                'breed' => 'nullable|string|max:255',
+                'size' => ['nullable', new Enum(PetSize::class)],
             ]);
 
             if ($validator->fails()) {
@@ -67,6 +77,10 @@ class PetController extends Controller
             $petData = [
                 'name' => $request->name,
                 'status' => $request->status ?? PetStatus::TRANSIT->value,
+                'age' => $request->age,
+                'type' => $request->type,
+                'breed' => $request->breed,
+                'size' => $request->size,
             ];
 
             // Handle photo upload
@@ -85,6 +99,10 @@ class PetController extends Controller
                     'photo' => $pet->photo,
                     'photo_url' => $pet->photo_url,
                     'status' => $pet->status->value,
+                    'age' => $pet->age,
+                    'type' => $pet->type?->value,
+                    'breed' => $pet->breed,
+                    'size' => $pet->size?->value,
                     'created_at' => $pet->created_at,
                     'updated_at' => $pet->updated_at,
                 ]
@@ -123,6 +141,10 @@ class PetController extends Controller
                     'photo' => $pet->photo,
                     'photo_url' => $pet->photo_url,
                     'status' => $pet->status->value,
+                    'age' => $pet->age,
+                    'type' => $pet->type?->value,
+                    'breed' => $pet->breed,
+                    'size' => $pet->size?->value,
                     'created_at' => $pet->created_at,
                     'updated_at' => $pet->updated_at,
                 ]
@@ -157,6 +179,10 @@ class PetController extends Controller
             $validator = Validator::make($request->all(), [
                 'name' => 'sometimes|required|string|max:255',
                 'photo' => 'sometimes|nullable|image|mimes:jpg,jpeg,png|max:2048',
+                'age' => 'sometimes|nullable|integer|min:0|max:30',
+                'type' => ['sometimes', 'nullable', new Enum(PetType::class)],
+                'breed' => 'sometimes|nullable|string|max:255',
+                'size' => ['sometimes', 'nullable', new Enum(PetSize::class)],
             ]);
 
             if ($validator->fails()) {
@@ -169,6 +195,18 @@ class PetController extends Controller
             // Update fields if provided
             if ($request->has('name')) {
                 $pet->name = $request->name;
+            }
+            if ($request->has('age')) {
+                $pet->age = $request->age;
+            }
+            if ($request->has('type')) {
+                $pet->type = $request->type;
+            }
+            if ($request->has('breed')) {
+                $pet->breed = $request->breed;
+            }
+            if ($request->has('size')) {
+                $pet->size = $request->size;
             }
             $pet->status = PetStatus::TRANSIT;
             // Handle photo upload
@@ -192,6 +230,10 @@ class PetController extends Controller
                     'photo' => $pet->photo,
                     'photo_url' => $pet->photo_url,
                     'status' => $pet->status->value,
+                    'age' => $pet->age,
+                    'type' => $pet->type?->value,
+                    'breed' => $pet->breed,
+                    'size' => $pet->size?->value,
                     'created_at' => $pet->created_at,
                     'updated_at' => $pet->updated_at,
                 ]
