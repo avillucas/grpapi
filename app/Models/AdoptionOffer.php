@@ -19,7 +19,20 @@ class AdoptionOffer extends Model
         'pet_id',
         'title',
         'headline',
+        'status',
     ];
+
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'status' => AdoptionOfferStatus::class,
+        ];
+    }
 
     /**
      * Get the pet that belongs to this adoption offer.

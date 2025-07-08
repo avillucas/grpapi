@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\Pet;
 use App\Models\AdoptionOffer;
+use App\Models\AdoptionOfferStatus;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -51,6 +52,7 @@ class AdoptionOfferFactory extends Factory
             'pet_id' => Pet::factory(),
             'title' => $this->faker->randomElement($titles),
             'headline' => $this->faker->randomElement($headlines),
+            'status' => $this->faker->randomElement(AdoptionOfferStatus::cases())->value,
         ];
     }
 }

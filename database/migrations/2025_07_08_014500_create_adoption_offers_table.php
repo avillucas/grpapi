@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('pet_id')->constrained()->onDelete('cascade');
             $table->string('title', 30);
             $table->string('headline', 120);
+            $table->enum('status', ['draft', 'published', 'closed'])->default('draft');
             $table->timestamps();
         });
     }

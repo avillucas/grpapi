@@ -6,6 +6,8 @@ use App\Models\Pet;
 use App\Models\PetStatus;
 use Illuminate\Http\Request;
 use App\Models\AdoptionOffer;
+use App\Models\AdoptionOfferStatus;
+use Illuminate\Validation\Rules\Enum;
 use Illuminate\Support\Facades\Validator;
 
 class AdoptionOfferController extends Controller
@@ -23,6 +25,7 @@ class AdoptionOfferController extends Controller
                     'id' => $offer->id,
                     'title' => $offer->title,
                     'headline' => $offer->headline,
+                    'status' => $offer->status->value,
                     'pet' => [
                         'id' => $offer->pet->id,
                         'name' => $offer->pet->name,
@@ -63,6 +66,7 @@ class AdoptionOfferController extends Controller
                 'pet_id' => 'required|exists:pets,id',
                 'title' => 'required|string|max:30',
                 'headline' => 'required|string|max:120',
+                'status' => ['nullable', new Enum(AdoptionOfferStatus::class)],
             ]);
 
             if ($validator->fails()) {
@@ -90,6 +94,7 @@ class AdoptionOfferController extends Controller
                 'pet_id' => $request->pet_id,
                 'title' => $request->title,
                 'headline' => $request->headline,
+                'status' => $request->status ?? AdoptionOfferStatus::DRAFT->value,
             ]);
 
             $offer->load('pet');
@@ -100,6 +105,7 @@ class AdoptionOfferController extends Controller
                     'id' => $offer->id,
                     'title' => $offer->title,
                     'headline' => $offer->headline,
+                    'status' => $offer->status->value,
                     'pet' => [
                         'id' => $offer->pet->id,
                         'name' => $offer->pet->name,
@@ -146,6 +152,7 @@ class AdoptionOfferController extends Controller
                     'id' => $offer->id,
                     'title' => $offer->title,
                     'headline' => $offer->headline,
+                    'status' => $offer->status->value,
                     'pet' => [
                         'id' => $offer->pet->id,
                         'name' => $offer->pet->name,
@@ -191,6 +198,7 @@ class AdoptionOfferController extends Controller
                 'pet_id' => 'sometimes|required|exists:pets,id',
                 'title' => 'sometimes|required|string|max:30',
                 'headline' => 'sometimes|required|string|max:120',
+                'status' => ['sometimes', 'required', new Enum(AdoptionOfferStatus::class)],
             ]);
 
             if ($validator->fails()) {
