@@ -20,6 +20,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('adoption-requests', AdoptionRequestController::class);
     
     // Additional routes for adoption request actions
-    Route::patch('adoption-requests/{id}/approve', [AdoptionRequestController::class, 'approve'])->name('adoption-requests.approve');
-    Route::patch('adoption-requests/{id}/reject', [AdoptionRequestController::class, 'reject'])->name('adoption-requests.reject');
+    Route::post('adoption-requests/myself', [AdoptionRequestController::class, 'myself'])->name('adoption-requests.approve');
+    Route::post('adoption-requests/{id}/approve', [AdoptionRequestController::class, 'approve'])->name('adoption-requests.approve');
+    Route::post('adoption-requests/{id}/reject', [AdoptionRequestController::class, 'reject'])->name('adoption-requests.reject');
 });

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\AdoptionRequest;
+use Illuminate\Support\Facades\Auth;
 use App\Models\AdoptionRequestStatus;
 use Illuminate\Validation\Rules\Enum;
 use Illuminate\Support\Facades\Validator;
@@ -48,6 +49,85 @@ class AdoptionRequestController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Failed to retrieve adoption requests',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+
+  /**
+     * Create a new adoption request for the authenticated user.
+     * 
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function myself(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'pet_id' => 'required|exists:pets,id',
+                'address' => 'required|string|max:255',
+                'phone' => 'required|string|max:20',
+                'application' => 'required|string',
+                'status' => ['nullable', new Enum(AdoptionRequestStatus::class)],
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+            $user_id = Auth::id();
+            // Check if user already has a pending request for this pet
+            $existingRequest = AdoptionRequest::where('pet_id', $request->pet_id)
+                ->where('user_id', $user_id)
+                ->where('status', AdoptionRequestStatus::PENDING->value)
+                ->first();
+
+            if ($existingRequest) {
+                return response()->json([
+                    'message' => 'User already has a pending adoption request for this pet'
+                ], 409);
+            }
+
+            $adoptionRequest = AdoptionRequest::create([
+                'pet_id' => $request->pet_id,
+                'user_id' => $user_id,
+                'address' => $request->address,
+                'phone' => $request->phone,
+                'application' => $request->application,
+                'status' => $request->status ?? AdoptionRequestStatus::PENDING->value,
+            ]);
+
+            $adoptionRequest->load(['pet', 'user']);
+
+            return response()->json([
+                'message' => 'Adoption request created successfully',
+                'data' => [
+                    'id' => $adoptionRequest->id,
+                    'address' => $adoptionRequest->address,
+                    'phone' => $adoptionRequest->phone,
+                    'application' => $adoptionRequest->application,
+                    'status' => $adoptionRequest->status->value,
+                    'pet' => [
+                        'id' => $adoptionRequest->pet->id,
+                        'name' => $adoptionRequest->pet->name,
+                        'status' => $adoptionRequest->pet->status->value,
+                    ],
+                    'user' => [
+                        'id' => $adoptionRequest->user->id,
+                        'name' => $adoptionRequest->user->name,
+                        'email' => $adoptionRequest->user->email,
+                    ],
+                    'created_at' => $adoptionRequest->created_at,
+                    'updated_at' => $adoptionRequest->updated_at,
+                ]
+            ], 201);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to create adoption request',
                 'error' => $e->getMessage()
             ], 500);
         }
