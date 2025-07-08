@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PetController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\AdoptionOfferController;
 use App\Http\Controllers\AdoptionRequestController;
 
 // Auth routes
@@ -19,6 +20,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('users', UserController::class);
     Route::apiResource('pets', PetController::class);
     Route::apiResource('adoption-requests', AdoptionRequestController::class);
+    Route::apiResource('adoption-offers', AdoptionOfferController::class);
     
     Route::post('adoption-requests/{id}/approve', [AdoptionRequestController::class, 'approve'])->name('adoption-requests.approve');
     Route::post('adoption-requests/{id}/reject', [AdoptionRequestController::class, 'reject'])->name('adoption-requests.reject');

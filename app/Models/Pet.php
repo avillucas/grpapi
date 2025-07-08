@@ -54,4 +54,12 @@ class Pet extends Model
     {
         return $this->hasMany(AdoptionRequest::class);
     }
+
+    /**
+     * Get the adoption offer for this pet.
+     */
+    public function adoptionOffer(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(AdoptionOffer::class);
+    }
 }
