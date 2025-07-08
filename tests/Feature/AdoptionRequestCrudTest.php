@@ -602,3 +602,85 @@ test('mine POST endpoint requires authentication', function () {
     
     $response->assertStatus(401);
 });
+
+test('can reject adoption request with reason', function () {
+    $adoptionRequest = AdoptionRequest::factory()->pending()->create();
+
+    $rejectData = [
+        'reject_reason' => 'No cumple con los requisitos de espacio necesario para esta mascota.'
+    ];
+
+    $response = $this->postJson("/api/adoption-requests/{$adoptionRequest->id}/reject", $rejectData);
+
+    $response->assertStatus(200)
+        ->assertJsonStructure([
+            'message',
+            'data' => [
+                'id',
+                'status',
+                'reject_reason'
+            ]
+        ])
+        ->assertJson([
+            'data' => [
+                'status' => 'rejected',
+                'reject_reason' => 'No cumple con los requisitos de espacio necesario para esta mascota.'
+            ]
+        ]);
+
+    $this->assertDatabaseHas('adoption_requests', [
+        'id' => $adoptionRequest->id,
+        'status' => 'rejected',
+        'reject_reason' => 'No cumple con los requisitos de espacio necesario para esta mascota.'
+    ]);
+});
+
+test('cannot reject adoption request without reason', function () {
+    $adoptionRequest = AdoptionRequest::factory()->pending()->create();
+
+    $response = $this->postJson("/api/adoption-requests/{$adoptionRequest->id}/reject", []);
+
+    $response->assertStatus(422)
+        ->assertJsonValidationErrors(['reject_reason']);
+});
+
+test('cannot reject adoption request with empty reason', function () {
+    $adoptionRequest = AdoptionRequest::factory()->pending()->create();
+
+    $rejectData = [
+        'reject_reason' => ''
+    ];
+
+    $response = $this->postJson("/api/adoption-requests/{$adoptionRequest->id}/reject", $rejectData);
+
+    $response->assertStatus(422)
+        ->assertJsonValidationErrors(['reject_reason']);
+});
+
+test('cannot reject adoption request with reason too long', function () {
+    $adoptionRequest = AdoptionRequest::factory()->pending()->create();
+
+    $rejectData = [
+        'reject_reason' => str_repeat('a', 1001) // 1001 characters, exceeds max of 1000
+    ];
+
+    $response = $this->postJson("/api/adoption-requests/{$adoptionRequest->id}/reject", $rejectData);
+
+    $response->assertStatus(422)
+        ->assertJsonValidationErrors(['reject_reason']);
+});
+
+test('adoption request responses include reject_reason field', function () {
+    $rejectedRequest = AdoptionRequest::factory()->rejected()->create();
+
+    $response = $this->getJson("/api/adoption-requests/{$rejectedRequest->id}");
+
+    $response->assertStatus(200)
+        ->assertJsonStructure([
+            'data' => [
+                'id',
+                'status',
+                'reject_reason'
+            ]
+        ]);
+});

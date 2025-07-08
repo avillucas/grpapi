@@ -27,13 +27,24 @@ class AdoptionRequestFactory extends Factory
      */
     public function definition(): array
     {
+        $status = $this->faker->randomElement(AdoptionRequestStatus::cases());
+        
         return [
             'pet_id' => Pet::factory(),
             'user_id' => User::factory(),
             'address' => $this->faker->address(),
             'phone' => $this->faker->phoneNumber(),
             'application' => $this->faker->paragraph(3),
-            'status' => $this->faker->randomElement(AdoptionRequestStatus::cases())->value,
+            'status' => $status->value,
+            'reject_reason' => $status === AdoptionRequestStatus::REJECTED 
+                ? $this->faker->randomElement([
+                    'No cumple con los requisitos de espacio necesario',
+                    'No tiene experiencia previa con mascotas',
+                    'La mascota necesita un ambiente más tranquilo',
+                    'No puede comprometerse con el tiempo necesario',
+                    'No cuenta con el presupuesto suficiente para los cuidados'
+                ])
+                : null,
         ];
     }
 
@@ -64,6 +75,13 @@ class AdoptionRequestFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'status' => AdoptionRequestStatus::REJECTED->value,
+            'reject_reason' => $this->faker->randomElement([
+                'No cumple con los requisitos de espacio necesario',
+                'No tiene experiencia previa con mascotas',
+                'La mascota necesita un ambiente más tranquilo',
+                'No puede comprometerse con el tiempo necesario',
+                'No cuenta con el presupuesto suficiente para los cuidados'
+            ]),
         ]);
     }
 

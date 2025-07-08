@@ -26,6 +26,7 @@ class AdoptionRequestController extends Controller
                     'phone' => $request->phone,
                     'application' => $request->application,
                     'status' => $request->status->value,
+                    'reject_reason' => $request->reject_reason,
                     'pet' => [
                         'id' => $request->pet->id,
                         'name' => $request->pet->name,
@@ -237,6 +238,7 @@ class AdoptionRequestController extends Controller
                     'phone' => $adoptionRequest->phone,
                     'application' => $adoptionRequest->application,
                     'status' => $adoptionRequest->status->value,
+                    'reject_reason' => $adoptionRequest->reject_reason,
                     'pet' => [
                         'id' => $adoptionRequest->pet->id,
                         'name' => $adoptionRequest->pet->name,
@@ -428,12 +430,24 @@ class AdoptionRequestController extends Controller
     /**
      * Reject an adoption request.
      * 
+     * @param \Illuminate\Http\Request $request
      * @param int $id
      * @return \Illuminate\Http\JsonResponse
      */
-    public function reject($id)
+    public function reject(Request $request, $id)
     {
         try {
+            $validator = Validator::make($request->all(), [
+                'reject_reason' => 'required|string|max:1000',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
             $adoptionRequest = AdoptionRequest::find($id);
 
             if (!$adoptionRequest) {
@@ -443,6 +457,7 @@ class AdoptionRequestController extends Controller
             }
 
             $adoptionRequest->status = AdoptionRequestStatus::REJECTED;
+            $adoptionRequest->reject_reason = $request->reject_reason;
             $adoptionRequest->save();
 
             return response()->json([
@@ -450,6 +465,7 @@ class AdoptionRequestController extends Controller
                 'data' => [
                     'id' => $adoptionRequest->id,
                     'status' => $adoptionRequest->status->value,
+                    'reject_reason' => $adoptionRequest->reject_reason,
                 ]
             ], 200);
 
@@ -482,6 +498,7 @@ class AdoptionRequestController extends Controller
                         'phone' => $request->phone,
                         'application' => $request->application,
                         'status' => $request->status->value,
+                        'reject_reason' => $request->reject_reason,
                         'pet' => [
                             'id' => $request->pet->id,
                             'name' => $request->pet->name,

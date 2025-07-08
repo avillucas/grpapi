@@ -23,6 +23,7 @@ class AdoptionRequest extends Model
         'phone',
         'application',
         'status',
+        'reject_reason',
     ];
 
     /**
