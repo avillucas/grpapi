@@ -460,4 +460,52 @@ class AdoptionRequestController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Display adoption requests for the authenticated user.
+     * 
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function mine()
+    {
+        try {
+            $userId = Auth::id();
+            
+            $adoptionRequests = AdoptionRequest::with(['pet'])
+                ->where('user_id', $userId)
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->map(function ($request) {
+                    return [
+                        'id' => $request->id,
+                        'address' => $request->address,
+                        'phone' => $request->phone,
+                        'application' => $request->application,
+                        'status' => $request->status->value,
+                        'pet' => [
+                            'id' => $request->pet->id,
+                            'name' => $request->pet->name,
+                            'status' => $request->pet->status->value,
+                            'photo_url' => $request->pet->photo_url,
+                            'age' => $request->pet->age,
+                            'type' => $request->pet->type?->value,
+                            'breed' => $request->pet->breed,
+                            'size' => $request->pet->size?->value,
+                        ],
+                        'created_at' => $request->created_at,
+                        'updated_at' => $request->updated_at,
+                    ];
+                });
+
+            return response()->json([
+                'message' => 'My adoption requests retrieved successfully',
+                'data' => $adoptionRequests
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to retrieve adoption requests',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

@@ -406,3 +406,93 @@ test('requires authentication for all adoption request operations', function () 
     $response = $this->withoutMiddleware(['auth:sanctum'])->get('/api/adoption-requests');
     $response->assertStatus(401);
 });
+
+test('can get my adoption requests ordered by creation date descending', function () {
+    $otherUser = User::factory()->create();
+    
+    // Create pets
+    $pet1 = Pet::factory()->create();
+    $pet2 = Pet::factory()->create(); 
+    $pet3 = Pet::factory()->create();
+    
+    // Create adoption requests for the authenticated user
+    $myRequest1 = AdoptionRequest::factory()->create([
+        'user_id' => $this->user->id,
+        'pet_id' => $pet1->id,
+        'created_at' => now()->subDays(3)
+    ]);
+    
+    $myRequest2 = AdoptionRequest::factory()->create([
+        'user_id' => $this->user->id,
+        'pet_id' => $pet2->id,
+        'created_at' => now()->subDays(1)
+    ]);
+    
+    $myRequest3 = AdoptionRequest::factory()->create([
+        'user_id' => $this->user->id,
+        'pet_id' => $pet3->id,
+        'created_at' => now()
+    ]);
+    
+    // Create adoption request for another user (should not appear)
+    AdoptionRequest::factory()->create([
+        'user_id' => $otherUser->id,
+        'pet_id' => $pet1->id
+    ]);
+
+    $response = $this->get('/api/adoption-requests/mine');
+
+    $response->assertStatus(200)
+        ->assertJsonStructure([
+            'message',
+            'data' => [
+                '*' => [
+                    'id',
+                    'address',
+                    'phone',
+                    'application',
+                    'status',
+                    'pet' => [
+                        'id',
+                        'name',
+                        'status',
+                        'photo_url',
+                        'age',
+                        'type',
+                        'breed',
+                        'size'
+                    ],
+                    'created_at',
+                    'updated_at'
+                ]
+            ]
+        ]);
+
+    $data = $response->json('data');
+    
+    // Should return only 3 requests (not the other user's request)
+    expect($data)->toHaveCount(3);
+    
+    // Should be ordered by creation date descending (newest first)
+    expect($data[0]['id'])->toBe($myRequest3->id);
+    expect($data[1]['id'])->toBe($myRequest2->id);
+    expect($data[2]['id'])->toBe($myRequest1->id);
+});
+
+test('returns empty array when user has no adoption requests', function () {
+    // Don't create any adoption requests for this user
+    
+    $response = $this->get('/api/adoption-requests/mine');
+
+    $response->assertStatus(200)
+        ->assertJson([
+            'message' => 'My adoption requests retrieved successfully',
+            'data' => []
+        ]);
+});
+
+test('mine endpoint requires authentication', function () {
+    $response = $this->withoutMiddleware(['auth:sanctum'])->get('/api/adoption-requests/mine');
+    
+    $response->assertStatus(401);
+});
