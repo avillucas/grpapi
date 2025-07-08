@@ -55,7 +55,6 @@ class PetController extends Controller
             $validator = Validator::make($request->all(), [
                 'name' => 'required|string|max:255',
                 'photo' => 'nullable|image|mimes:jpg,jpeg,png|max:2048', // 2MB max
-                'status' => ['nullable', new Enum(PetStatus::class)],
             ]);
 
             if ($validator->fails()) {
@@ -158,7 +157,6 @@ class PetController extends Controller
             $validator = Validator::make($request->all(), [
                 'name' => 'sometimes|required|string|max:255',
                 'photo' => 'sometimes|nullable|image|mimes:jpg,jpeg,png|max:2048',
-                'status' => ['sometimes', 'nullable', new Enum(PetStatus::class)],
             ]);
 
             if ($validator->fails()) {
@@ -172,11 +170,7 @@ class PetController extends Controller
             if ($request->has('name')) {
                 $pet->name = $request->name;
             }
-
-            if ($request->has('status')) {
-                $pet->status = $request->status;
-            }
-
+            $pet->status = PetStatus::TRANSIT;
             // Handle photo upload
             if ($request->hasFile('photo')) {
                 // Delete old photo if exists
