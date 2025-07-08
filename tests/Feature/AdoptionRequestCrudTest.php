@@ -491,8 +491,114 @@ test('returns empty array when user has no adoption requests', function () {
         ]);
 });
 
-test('mine endpoint requires authentication', function () {
+test('mine GET endpoint requires authentication', function () {
     $response = $this->withoutMiddleware(['auth:sanctum'])->get('/api/adoption-requests/mine');
+    
+    $response->assertStatus(401);
+});
+
+test('can create adoption request for authenticated user via mine endpoint', function () {
+    $pet = Pet::factory()->create();
+
+    $adoptionRequestData = [
+        'pet_id' => $pet->id,
+        'address' => 'Av. Corrientes 1234, CABA',
+        'phone' => '1122334455',
+        'application' => 'Me encanta esta mascota y quiero adoptarla porque...'
+    ];
+
+    $response = $this->postJson('/api/adoption-requests/mine', $adoptionRequestData);
+
+    $response->assertStatus(201)
+        ->assertJsonStructure([
+            'message',
+            'data' => [
+                'id',
+                'address',
+                'phone',
+                'application',
+                'status',
+                'pet' => [
+                    'id',
+                    'name',
+                    'status',
+                    'photo_url',
+                    'age',
+                    'type',
+                    'breed',
+                    'size'
+                ],
+                'created_at',
+                'updated_at'
+            ]
+        ]);
+
+    $this->assertDatabaseHas('adoption_requests', [
+        'pet_id' => $pet->id,
+        'user_id' => $this->user->id,
+        'address' => 'Av. Corrientes 1234, CABA',
+        'phone' => '1122334455',
+        'application' => 'Me encanta esta mascota y quiero adoptarla porque...',
+        'status' => 'pending'
+    ]);
+});
+
+test('cannot create adoption request via mine endpoint with invalid data', function () {
+    $response = $this->postJson('/api/adoption-requests/mine', []);
+
+    $response->assertStatus(422)
+        ->assertJsonValidationErrors(['pet_id', 'address', 'phone', 'application']);
+});
+
+test('cannot create adoption request via mine endpoint for non-existent pet', function () {
+    $adoptionRequestData = [
+        'pet_id' => 999,
+        'address' => 'Av. Corrientes 1234, CABA',
+        'phone' => '1122334455',
+        'application' => 'Me encanta esta mascota'
+    ];
+
+    $response = $this->postJson('/api/adoption-requests/mine', $adoptionRequestData);
+
+    $response->assertStatus(422)
+        ->assertJsonValidationErrors(['pet_id']);
+});
+
+test('cannot create duplicate pending adoption request via mine endpoint', function () {
+    $pet = Pet::factory()->create();
+    
+    // Create first adoption request
+    AdoptionRequest::factory()->create([
+        'user_id' => $this->user->id,
+        'pet_id' => $pet->id,
+        'status' => 'pending'
+    ]);
+
+    // Try to create second adoption request for same pet
+    $adoptionRequestData = [
+        'pet_id' => $pet->id,
+        'address' => 'Av. Corrientes 1234, CABA',
+        'phone' => '1122334455',
+        'application' => 'Me encanta esta mascota'
+    ];
+
+    $response = $this->postJson('/api/adoption-requests/mine', $adoptionRequestData);
+
+    $response->assertStatus(409)
+        ->assertJson(['message' => 'User already has a pending adoption request for this pet']);
+});
+
+test('mine POST endpoint requires authentication', function () {
+    $pet = Pet::factory()->create();
+    
+    $adoptionRequestData = [
+        'pet_id' => $pet->id,
+        'address' => 'Av. Corrientes 1234, CABA',
+        'phone' => '1122334455',
+        'application' => 'Me encanta esta mascota'
+    ];
+
+    $response = $this->withoutMiddleware(['auth:sanctum'])->postJson('/api/adoption-requests/mine', $adoptionRequestData);
     
     $response->assertStatus(401);
 });

@@ -13,7 +13,8 @@ Route::post('/register', [AuthController::class, 'register'])->name('api.registe
 
 // User CRUD routes (protected by authentication)
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('adoption-requests/mine', [AdoptionRequestController::class, 'mine'])->name('adoption-requests.mine');
+    Route::get('adoption-requests/mine', [AdoptionRequestController::class, 'myRequests'])->name('adoption-requests.my-requests');
+    Route::post('adoption-requests/mine', [AdoptionRequestController::class, 'mine'])->name('adoption-requests.mine');
     Route::post('adoption-requests/myself', [AdoptionRequestController::class, 'myself'])->name('adoption-requests.myself');
 });
 // User CRUD routes (protected by admin authentication)
