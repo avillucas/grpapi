@@ -291,4 +291,48 @@ class AdoptionOfferController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Display published adoption offers.
+     * 
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function published()
+    {
+        try {
+            $offers = AdoptionOffer::with('pet')
+                ->where('status', AdoptionOfferStatus::PUBLISHED->value)
+                ->get()
+                ->map(function ($offer) {
+                    return [
+                        'id' => $offer->id,
+                        'title' => $offer->title,
+                        'headline' => $offer->headline,
+                        'status' => $offer->status->value,
+                        'pet' => [
+                            'id' => $offer->pet->id,
+                            'name' => $offer->pet->name,
+                            'photo_url' => $offer->pet->photo_url,
+                            'status' => $offer->pet->status->value,
+                            'age' => $offer->pet->age,
+                            'type' => $offer->pet->type?->value,
+                            'breed' => $offer->pet->breed,
+                            'size' => $offer->pet->size?->value,
+                        ],
+                        'created_at' => $offer->created_at,
+                        'updated_at' => $offer->updated_at,
+                    ];
+                });
+
+            return response()->json([
+                'message' => 'Published adoption offers retrieved successfully',
+                'data' => $offers
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to retrieve published adoption offers',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

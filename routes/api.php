@@ -11,6 +11,9 @@ use App\Http\Controllers\AdoptionRequestController;
 Route::post('/login', [AuthController::class, 'login'])->name('api.login');
 Route::post('/register', [AuthController::class, 'register'])->name('api.register');
 
+// Public routes
+Route::get('adoption-offers/published', [AdoptionOfferController::class, 'published'])->name('adoption-offers.published');
+
 // User CRUD routes (protected by authentication)
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('adoption-requests/mine', [AdoptionRequestController::class, 'myRequests'])->name('adoption-requests.my-requests');

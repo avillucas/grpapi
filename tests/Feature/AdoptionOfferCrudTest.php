@@ -203,3 +203,88 @@ test('validates headline length', function () {
     $response->assertStatus(422)
         ->assertJsonValidationErrors(['headline']);
 });
+
+test('can get published adoption offers', function () {
+    // Create adoption offers with different statuses
+    $publishedOffer1 = AdoptionOffer::factory()->create(['status' => 'publicada']);
+    $publishedOffer2 = AdoptionOffer::factory()->create(['status' => 'publicada']);
+    $draftOffer = AdoptionOffer::factory()->create(['status' => 'borrador']);
+    $closedOffer = AdoptionOffer::factory()->create(['status' => 'cerrada']);
+
+    $response = $this->getJson('/api/adoption-offers/published');
+
+    $response->assertStatus(200)
+        ->assertJsonStructure([
+            'message',
+            'data' => [
+                '*' => [
+                    'id',
+                    'title',
+                    'headline',
+                    'status',
+                    'pet' => [
+                        'id',
+                        'name',
+                        'photo_url',
+                        'status',
+                        'age',
+                        'type',
+                        'breed',
+                        'size'
+                    ],
+                    'created_at',
+                    'updated_at'
+                ]
+            ]
+        ])
+        ->assertJson([
+            'message' => 'Published adoption offers retrieved successfully'
+        ]);
+
+    $data = $response->json('data');
+    
+    // Should return only 2 published offers
+    expect($data)->toHaveCount(2);
+    
+    // Verify all returned offers have status 'publicada'
+    foreach ($data as $offer) {
+        expect($offer['status'])->toBe('publicada');
+    }
+    
+    // Verify the correct offers are returned
+    $returnedIds = collect($data)->pluck('id')->toArray();
+    expect($returnedIds)->toContain($publishedOffer1->id);
+    expect($returnedIds)->toContain($publishedOffer2->id);
+    expect($returnedIds)->not->toContain($draftOffer->id);
+    expect($returnedIds)->not->toContain($closedOffer->id);
+});
+
+test('returns empty array when no published adoption offers exist', function () {
+    // Create only draft and closed offers
+    AdoptionOffer::factory()->create(['status' => 'borrador']);
+    AdoptionOffer::factory()->create(['status' => 'cerrada']);
+
+    $response = $this->getJson('/api/adoption-offers/published');
+
+    $response->assertStatus(200)
+        ->assertJson([
+            'message' => 'Published adoption offers retrieved successfully',
+            'data' => []
+        ]);
+});
+
+test('published endpoint does not require authentication', function () {
+    // Create published offers
+    AdoptionOffer::factory()->count(2)->create(['status' => 'publicada']);
+
+    // Make request without authentication
+    $response = $this->withoutMiddleware(['auth:sanctum'])->getJson('/api/adoption-offers/published');
+
+    $response->assertStatus(200)
+        ->assertJsonStructure([
+            'message',
+            'data'
+        ]);
+
+    expect($response->json('data'))->toHaveCount(2);
+});
