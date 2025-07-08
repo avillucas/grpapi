@@ -44,7 +44,7 @@ class Pet extends Model
      */
     public function getPhotoUrlAttribute(): ?string
     {
-        return $this->photo ? asset('storage/' . $this->photo) : null;
+        return $this->photo ? 'http://localhost:3000' . $this->photo : null;
     }
 
     /**
