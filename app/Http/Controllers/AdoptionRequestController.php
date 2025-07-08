@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Pet;
 use App\Models\PetStatus;
 use Illuminate\Http\Request;
+use App\Models\AdoptionOffer;
 use App\Models\AdoptionRequest;
+use App\Models\AdoptionOfferStatus;
 use Illuminate\Support\Facades\Auth;
 use App\Models\AdoptionRequestStatus;
 use Illuminate\Validation\Rules\Enum;
@@ -412,6 +414,16 @@ class AdoptionRequestController extends Controller
             // Optionally update pet status to adopted
             $adoptionRequest->pet->status = PetStatus::ADOPTED;
             $adoptionRequest->pet->save();
+            
+            //anular el resto de las solicitudes de adopción para el mismo animal
+            AdoptionRequest::where('pet_id', $adoptionRequest->pet_id)
+                ->where('id', '!=', $adoptionRequest->id)
+                ->where('status', AdoptionRequestStatus::PENDING->value)
+                ->update(['status' => AdoptionRequestStatus::REJECTED]);
+            //cerrando las ofertas de adopción pendientes para el mismo animal
+            AdoptionOffer::where('pet_id', $adoptionRequest->pet_id)
+                ->where('status', AdoptionOfferStatus::PUBLISHED->value)
+                ->update(['status' => AdoptionOfferStatus::CLOSED]);
 
             return response()->json([
                 'message' => 'Adoption request approved successfully',
