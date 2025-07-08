@@ -29,5 +29,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     
     Route::post('adoption-requests/{id}/approve', [AdoptionRequestController::class, 'approve'])->name('adoption-requests.approve');
     Route::post('adoption-requests/{id}/reject', [AdoptionRequestController::class, 'reject'])->name('adoption-requests.reject');
+    
+    Route::post('adoption-offers/{id}/publish', [AdoptionOfferController::class, 'publish'])->name('adoption-offers.publish');
+    Route::post('adoption-offers/{id}/draft', [AdoptionOfferController::class, 'draft'])->name('adoption-offers.draft');
 });
 

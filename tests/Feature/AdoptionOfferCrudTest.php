@@ -288,3 +288,117 @@ test('published endpoint does not require authentication', function () {
 
     expect($response->json('data'))->toHaveCount(2);
 });
+
+test('can publish an adoption offer', function () {
+    $offer = AdoptionOffer::factory()->create(['status' => 'borrador']);
+
+    $response = $this->postJson("/api/adoption-offers/{$offer->id}/publish");
+
+    $response->assertStatus(200)
+        ->assertJsonStructure([
+            'message',
+            'data' => [
+                'id',
+                'title',
+                'headline',
+                'status'
+            ]
+        ])
+        ->assertJson([
+            'message' => 'Adoption offer published successfully',
+            'data' => [
+                'id' => $offer->id,
+                'status' => 'publicada'
+            ]
+        ]);
+
+    $this->assertDatabaseHas('adoption_offers', [
+        'id' => $offer->id,
+        'status' => 'publicada'
+    ]);
+});
+
+test('can set adoption offer to draft', function () {
+    $offer = AdoptionOffer::factory()->create(['status' => 'publicada']);
+
+    $response = $this->postJson("/api/adoption-offers/{$offer->id}/draft");
+
+    $response->assertStatus(200)
+        ->assertJsonStructure([
+            'message',
+            'data' => [
+                'id',
+                'title',
+                'headline',
+                'status'
+            ]
+        ])
+        ->assertJson([
+            'message' => 'Adoption offer set to draft successfully',
+            'data' => [
+                'id' => $offer->id,
+                'status' => 'borrador'
+            ]
+        ]);
+
+    $this->assertDatabaseHas('adoption_offers', [
+        'id' => $offer->id,
+        'status' => 'borrador'
+    ]);
+});
+
+test('cannot publish non-existent adoption offer', function () {
+    $response = $this->postJson('/api/adoption-offers/999/publish');
+
+    $response->assertStatus(404)
+        ->assertJson([
+            'message' => 'Adoption offer not found'
+        ]);
+});
+
+test('cannot set non-existent adoption offer to draft', function () {
+    $response = $this->postJson('/api/adoption-offers/999/draft');
+
+    $response->assertStatus(404)
+        ->assertJson([
+            'message' => 'Adoption offer not found'
+        ]);
+});
+
+test('publish and draft endpoints require authentication', function () {
+    $offer = AdoptionOffer::factory()->create();
+
+    // Test publish without auth
+    $response = $this->withoutMiddleware(['auth:sanctum'])->postJson("/api/adoption-offers/{$offer->id}/publish");
+    $response->assertStatus(401);
+
+    // Test draft without auth
+    $response = $this->withoutMiddleware(['auth:sanctum'])->postJson("/api/adoption-offers/{$offer->id}/draft");
+    $response->assertStatus(401);
+});
+
+test('can publish already published offer', function () {
+    $offer = AdoptionOffer::factory()->create(['status' => 'publicada']);
+
+    $response = $this->postJson("/api/adoption-offers/{$offer->id}/publish");
+
+    $response->assertStatus(200)
+        ->assertJson([
+            'data' => [
+                'status' => 'publicada'
+            ]
+        ]);
+});
+
+test('can set already draft offer to draft', function () {
+    $offer = AdoptionOffer::factory()->create(['status' => 'borrador']);
+
+    $response = $this->postJson("/api/adoption-offers/{$offer->id}/draft");
+
+    $response->assertStatus(200)
+        ->assertJson([
+            'data' => [
+                'status' => 'borrador'
+            ]
+        ]);
+});

@@ -335,4 +335,80 @@ class AdoptionOfferController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Publish an adoption offer.
+     * 
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function publish($id)
+    {
+        try {
+            $offer = AdoptionOffer::find($id);
+
+            if (!$offer) {
+                return response()->json([
+                    'message' => 'Adoption offer not found'
+                ], 404);
+            }
+
+            $offer->status = AdoptionOfferStatus::PUBLISHED;
+            $offer->save();
+
+            return response()->json([
+                'message' => 'Adoption offer published successfully',
+                'data' => [
+                    'id' => $offer->id,
+                    'title' => $offer->title,
+                    'headline' => $offer->headline,
+                    'status' => $offer->status->value,
+                ]
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to publish adoption offer',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Set an adoption offer to draft status.
+     * 
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function draft($id)
+    {
+        try {
+            $offer = AdoptionOffer::find($id);
+
+            if (!$offer) {
+                return response()->json([
+                    'message' => 'Adoption offer not found'
+                ], 404);
+            }
+
+            $offer->status = AdoptionOfferStatus::DRAFT;
+            $offer->save();
+
+            return response()->json([
+                'message' => 'Adoption offer set to draft successfully',
+                'data' => [
+                    'id' => $offer->id,
+                    'title' => $offer->title,
+                    'headline' => $offer->headline,
+                    'status' => $offer->status->value,
+                ]
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to set adoption offer to draft',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
